@@ -1,167 +1,181 @@
 import React, { useState } from 'react';
 import { 
   Container, Typography, Box, Paper, Grid, 
-  Chip, Stack, Avatar, Divider, IconButton, Tooltip 
+  Avatar, IconButton, Chip, Tooltip, Fab,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Button, MenuItem
 } from '@mui/material';
 import { 
-  EventNote, Assignment, School, 
-  FilterList, NotificationsActive, CalendarMonth 
+  ChevronLeft, ChevronRight, School, Assignment, 
+  Today, BeachAccess, Mosque, Add, AccessTime
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MyCalendar = () => {
-  // État pour filtrer les événements
-  const [filter, setFilter] = useState('Tous');
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1));
+  const [selectedDate, setSelectedDate] = useState(null);
+  
+  // États pour la modale d'ajout
+  const [open, setOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    type: 'Devoir',
+    time: '08:00',
+    importance: 'Moyenne'
+  });
 
-  const events = [
-    { 
-      id: 1, 
-      title: 'Examen Final - Algorithmique', 
-      date: '25 Janvier 2026', 
-      time: '09:00 - 11:00',
-      type: 'Examen', 
-      location: 'Amphi B',
-      importance: 'Critique'
-    },
-    { 
-      id: 2, 
-      title: 'Rendu Projet Web (React/Node)', 
-      date: '30 Janvier 2026', 
-      time: 'Avant 23:59',
-      type: 'Devoir', 
-      location: 'Plateforme en ligne',
-      importance: 'Élevée'
-    },
-    { 
-      id: 3, 
-      title: 'Quiz Surprise - Base de Données', 
-      date: '02 Février 2026', 
-      time: '14:30',
-      type: 'Examen', 
-      location: 'Salle 102',
-      importance: 'Moyenne'
-    },
-    { 
-      id: 4, 
-      title: 'Atelier Pratique Architecture Cloud', 
-      date: '05 Février 2026', 
-      time: '10:00 - 12:00',
-      type: 'Atelier', 
-      location: 'Labo Info 4',
-      importance: 'Optionnel'
-    }
-  ];
+  // --- BASE DE DONNÉES DYNAMIQUE ---
+  const [events, setEvents] = useState([
+    { start: '2026-01-25', end: '2026-02-01', title: 'Vacances de mi-année', type: 'Vacances', category: 'Scolaire' },
+    { date: '2026-01-11', title: 'Manifeste de l\'Indépendance', type: 'Férié', category: 'National' },
+    { date: '2026-02-02', title: 'Examen Réseaux', type: 'Examen', category: 'Études' },
+  ]);
 
-  const filteredEvents = filter === 'Tous' 
-    ? events 
-    : events.filter(e => e.type === filter);
+  // --- LOGIQUE CALENDRIER ---
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+  const monthName = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(currentDate);
 
-  const getImportanceColor = (level) => {
-    switch(level) {
-      case 'Critique': return '#d32f2f';
-      case 'Élevée': return '#ed6c02';
-      case 'Moyenne': return '#0288d1';
-      default: return '#757575';
-    }
+  const getEventsForDate = (day) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return events.filter(e => 
+      e.date === dateStr || (e.start && (new Date(dateStr) >= new Date(e.start) && new Date(dateStr) <= new Date(e.end)))
+    );
+  };
+
+  // --- ACTIONS ---
+  const handleOpen = () => {
+    if (!selectedDate) alert("Veuillez d'abord sélectionner un jour sur le calendrier !");
+    else setOpen(true);
+  };
+
+  const handleSaveEvent = () => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+    const eventToAdd = {
+      ...newEvent,
+      date: dateStr,
+      category: 'Personnel'
+    };
+    setEvents([...events, eventToAdd]);
+    setOpen(false);
+    setNewEvent({ title: '', type: 'Devoir', time: '08:00', importance: 'Moyenne' });
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
-      {/* Header avec Statistiques rapides */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 9 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4" fontWeight="900" sx={{ color: 'primary.main', textTransform: 'capitalize' }}>
+          {monthName} {year}
+        </Typography>
         <Box>
-          <Typography variant="h3" sx={{ fontWeight: 800, color: '#1a237e', display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CalendarMonth fontSize="large" /> Mon Agenda
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Vous avez {events.filter(e => e.type === 'Examen').length} examens prévus ce mois-ci.
-          </Typography>
+          <IconButton onClick={() => setCurrentDate(new Date(year, month - 1, 1))}><ChevronLeft /></IconButton>
+          <IconButton onClick={() => setCurrentDate(new Date(year, month + 1, 1))}><ChevronRight /></IconButton>
         </Box>
-        <Tooltip title="Rappels activés">
-          <IconButton color="primary" sx={{ border: '1px solid', borderColor: 'divider' }}>
-            <NotificationsActive />
-          </IconButton>
-        </Tooltip>
       </Box>
 
-      {/* Barre de Filtres */}
-      <Stack direction="row" spacing={1} sx={{ mb: 4, overflowX: 'auto', pb: 1 }}>
-        <Chip 
-          icon={<FilterList />} 
-          label="Tous" 
-          onClick={() => setFilter('Tous')} 
-          variant={filter === 'Tous' ? 'filled' : 'outlined'}
-          color="primary"
-        />
-        {['Examen', 'Devoir', 'Atelier'].map((category) => (
-          <Chip 
-            key={category}
-            label={category} 
-            onClick={() => setFilter(category)} 
-            variant={filter === category ? 'filled' : 'outlined'}
-            clickable
-          />
-        ))}
-      </Stack>
+      {/* Grille du Calendrier */}
+      <Paper elevation={4} sx={{ borderRadius: 4, overflow: 'hidden', bgcolor: 'background.paper' }}>
+        <Grid container sx={{ bgcolor: 'action.hover' }}>
+          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
+            <Grid item xs={1.71} key={d} sx={{ textAlign: 'center', py: 2 }}>
+              <Typography variant="caption" fontWeight="bold" color="textSecondary">{d}</Typography>
+            </Grid>
+          ))}
+        </Grid>
+        <Grid container>
+          {Array.from({ length: firstDayIndex }).map((_, i) => (
+            <Grid item xs={1.71} key={`empty-${i}`} sx={{ height: 90, bgcolor: 'action.hover', opacity: 0.5 }} />
+          ))}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const dayEvents = getEventsForDate(day);
+            const isVacation = dayEvents.some(e => e.type === 'Vacances' || e.type === 'Férié');
+            const isSelected = selectedDate === day;
 
-      {/* Liste des événements style Timeline */}
-      <Grid container spacing={3}>
-        {filteredEvents.map((event) => (
-          <Grid item xs={12} key={event.id}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 0, 
-                borderRadius: 4, 
-                overflow: 'hidden', 
-                border: '1px solid #e0e0e0',
-                transition: '0.3s',
-                '&:hover': { boxShadow: '0 8px 24px rgba(0,0,0,0.1)', transform: 'translateY(-2px)' }
-              }}
-            >
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
-                {/* Barre latérale de couleur selon l'importance */}
-                <Box sx={{ width: '8px', bgcolor: getImportanceColor(event.importance) }} />
-                
-                <Box sx={{ p: 3, flexGrow: 1 }}>
-                  <Grid container alignItems="center" spacing={2}>
-                    <Grid item>
-                      <Avatar sx={{ bgcolor: event.type === 'Examen' ? '#fff0f0' : '#e3f2fd', color: event.type === 'Examen' ? '#d32f2f' : '#1976d2', width: 56, height: 56 }}>
-                        {event.type === 'Examen' ? <School /> : <Assignment />}
-                      </Avatar>
-                    </Grid>
-                    
-                    <Grid item xs={12} sm={6}>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{event.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <EventNote fontSize="small" /> {event.date} • {event.time}
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={12} sm={4} sx={{ textAlign: { sm: 'right' } }}>
-                      <Typography variant="body2" sx={{ fontWeight: 'medium', mb: 1 }}>{event.location}</Typography>
-                      <Chip 
-                        label={event.importance} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: getImportanceColor(event.importance), 
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }} 
-                      />
-                    </Grid>
-                  </Grid>
+            return (
+              <Grid item xs={1.71} key={day} onClick={() => setSelectedDate(day)}
+                sx={{ 
+                  height: 90, border: '0.1px solid', borderColor: 'divider', cursor: 'pointer',
+                  bgcolor: isSelected ? 'primary.light' : (isVacation ? 'warning.light' : 'background.paper'),
+                  '&:hover': { bgcolor: 'action.selected' }, transition: '0.2s'
+                }}
+              >
+                <Typography sx={{ m: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>{day}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                  {dayEvents.map((e, idx) => (
+                    <Box key={idx} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: e.type === 'Examen' ? 'error.main' : 'success.main' }} />
+                  ))}
                 </Box>
-              </Box>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Paper>
 
-      {filteredEvents.length === 0 && (
-        <Box sx={{ textAlign: 'center', mt: 10, opacity: 0.5 }}>
-          <Typography variant="h6">Aucun événement trouvé pour cette catégorie.</Typography>
-        </Box>
-      )}
+      {/* Détails du jour sélectionné */}
+      <Box sx={{ mt: 3 }}>
+        <AnimatePresence mode="wait">
+          {selectedDate && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Événements du {selectedDate} {monthName}</Typography>
+              {getEventsForDate(selectedDate).map((e, idx) => (
+                <Paper key={idx} sx={{ p: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2 }}>
+                   <Avatar sx={{ bgcolor: 'primary.main' }}><AccessTime /></Avatar>
+                   <Box sx={{ flexGrow: 1 }}>
+                     <Typography fontWeight="bold">{e.title}</Typography>
+                     <Typography variant="body2" color="textSecondary">{e.time} • {e.type}</Typography>
+                   </Box>
+                </Paper>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Box>
+
+      {/* BOUTON AJOUTER (Style Google Calendar) */}
+      <Fab 
+        color="primary" 
+        aria-label="add" 
+        onClick={handleOpen}
+        sx={{ position: 'fixed', bottom: 30, right: 30, boxShadow: 4 }}
+      >
+        <Add />
+      </Fab>
+
+      {/* MODALE D'AJOUT */}
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Nouvel événement</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus margin="dense" label="Titre de l'événement" fullWidth variant="outlined"
+            value={newEvent.title} onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+            sx={{ mb: 2, mt: 1 }}
+          />
+          <TextField
+            select label="Type" fullWidth value={newEvent.type}
+            onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="Devoir">Devoir / TP</MenuItem>
+            <MenuItem value="Examen">Révision Examen</MenuItem>
+            <MenuItem value="Autre">Autre</MenuItem>
+          </TextField>
+          <TextField
+            label="Heure" type="time" fullWidth
+            value={newEvent.time} onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setOpen(false)}>Annuler</Button>
+          <Button onClick={handleSaveEvent} variant="contained" disabled={!newEvent.title}>
+            Enregistrer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

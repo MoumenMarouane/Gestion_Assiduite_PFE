@@ -1,147 +1,101 @@
 import React, { useState } from 'react';
-import {
-  Container,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Alert,
-  Link,
-  Grid
-} from '@mui/material';
+import { Container, Paper, TextField, Button, Typography, Box, Link, Grid } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    nom: '',
-    prenom: ''
-  });
-  
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  // Animation variants for children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    // Simulation d'inscription
-    setTimeout(() => {
-      setLoading(false);
-      alert('Inscription simulée avec succès ! Redirection vers la connexion...');
-      navigate('/login');
-    }, 1000);
+  const itemVariants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: { x: 0, opacity: 1 }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      }}
+    >
+      <Container component="main" maxWidth="xs">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
         >
-          <Typography component="h1" variant="h4" sx={{ mb: 3 }}>
-            Inscription
-          </Typography>
-          
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Prénom"
-              name="prenom"
-              value={formData.prenom}
-              onChange={handleChange}
-            />
-            
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Nom"
-              name="nom"
-              value={formData.nom}
-              onChange={handleChange}
-            />
-            
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Adresse Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Mot de passe"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={loading}
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-            >
-              {loading ? 'Inscription...' : "S'inscrire"}
-            </Button>
-            
-            <Grid container>
-              <Grid item>
-                <Link href="/login" variant="body2">
-                  {"Déjà un compte? Connectez-vous"}
-                </Link>
+          <Paper
+            elevation={20}
+            sx={{
+              padding: 4,
+              borderRadius: 4,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            }}
+          >
+            <Typography component="h1" variant="h4" align="center" fontWeight="800" sx={{ mb: 3, color: '#764ba2' }}>
+              Rejoignez-nous
+            </Typography>
+
+            <Box component="form" noValidate>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <motion.div variants={itemVariants}>
+                    <TextField name="prenom" fullWidth label="Prénom" variant="filled" />
+                  </motion.div>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <motion.div variants={itemVariants}>
+                    <TextField name="nom" fullWidth label="Nom" variant="filled" />
+                  </motion.div>
+                </Grid>
+                <Grid item xs={12}>
+                  <motion.div variants={itemVariants}>
+                    <TextField name="email" fullWidth label="Email" variant="filled" />
+                  </motion.div>
+                </Grid>
+                <Grid item xs={12}>
+                  <motion.div variants={itemVariants}>
+                    <TextField name="password" fullWidth label="Mot de passe" type="password" variant="filled" />
+                  </motion.div>
+                </Grid>
               </Grid>
-            </Grid>
-          </Box>
-        </Paper>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-          Système de Gestion d'Assiduité et d'Adaptation
-        </Typography>
-      </Box>
-    </Container>
+
+              <motion.div variants={itemVariants} whileHover={{ scale: 1.03 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    mt: 4, mb: 2, py: 1.5,
+                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                    boxShadow: '0 4px 15px rgba(118, 75, 162, 0.4)'
+                  }}
+                >
+                  S'inscrire
+                </Button>
+              </motion.div>
+
+              <Box textAlign="center">
+                <Link href="/login" variant="body2" sx={{ textDecoration: 'none' }}>
+                  Déjà membre? Connectez-vous ici
+                </Link>
+              </Box>
+            </Box>
+          </Paper>
+        </motion.div>
+      </Container>
+    </Box>
   );
 };
 
