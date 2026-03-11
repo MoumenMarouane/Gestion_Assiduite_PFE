@@ -1,226 +1,195 @@
 import React, { useState } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Button,
-  TextField,
-  Alert,
-  Card,
-  CardContent,
-  Grid,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Container, Paper, Typography, Box, Button, TextField,
+  Card, CardContent, Grid, Chip, Dialog, DialogTitle,
+  DialogContent, DialogActions
 } from '@mui/material';
-import { QrCodeScanner as QrCodeIcon, CheckCircle, Cancel } from '@mui/icons-material';
+import { 
+  AssignmentInd as AttendanceIcon, 
+  CheckCircle, 
+  Cancel, 
+  ContentPaste as PasteIcon 
+} from '@mui/icons-material';
 
 const ScanQR = () => {
   const [qrCode, setQrCode] = useState('');
   const [message, setMessage] = useState('');
-  const [status, setStatus] = useState('');
   const [successDialog, setSuccessDialog] = useState(false);
   const [errorDialog, setErrorDialog] = useState(false);
+  
+  // Historique factice pour l'exemple
   const [scanHistory, setScanHistory] = useState([
     { cours: 'Base de données', date: '2024-01-10T08:30:00', statut: 'PRESENT' },
-    { cours: 'Algorithmique', date: '2024-01-09T10:00:00', statut: 'RETARD' },
-    { cours: 'Programmation Web', date: '2024-01-08T14:00:00', statut: 'PRESENT' }
+    { cours: 'Algorithmique', date: '2024-01-09T10:00:00', statut: 'RETARD' }
   ]);
 
-  const handleScan = () => {
-    if (!qrCode.trim()) {
-      setMessage('Veuillez entrer un code QR');
-      setStatus('error');
+  const handleValidation = () => {
+    // Nettoyage du code (enlève les espaces inutiles)
+    const cleanedCode = qrCode.trim();
+
+    if (!cleanedCode) {
+      setMessage('Le champ est vide. Veuillez coller le code affiché par le professeur.');
+      setErrorDialog(true);
+      return;
+    }
+
+    // Ici, vous pourriez ajouter une vérification réelle (ex: longueur ou format)
+    if (cleanedCode.length < 4) {
+      setMessage('Le code saisi semble trop court ou invalide.');
       setErrorDialog(true);
       return;
     }
     
-    // Simulation d'un scan réussi
+    // Simulation d'un enregistrement réussi
     const newScan = {
-      cours: 'Cours Test',
+      cours: 'Cours Actuel', // Idéalement récupéré via le code
       date: new Date().toISOString(),
       statut: 'PRESENT'
     };
     
     setScanHistory([newScan, ...scanHistory]);
-    setMessage('Présence enregistrée avec succès !');
-    setStatus('success');
     setSuccessDialog(true);
-    setQrCode('');
+    setQrCode(''); // On vide le champ après succès
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' - ' + 
+           date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'PRESENT':
-        return 'success';
-      case 'RETARD':
-        return 'warning';
-      case 'ABSENT':
-        return 'error';
-      default:
-        return 'info';
-    }
+    const colors = { 'PRESENT': 'success', 'RETARD': 'warning', 'ABSENT': 'error' };
+    return colors[status] || 'info';
   };
 
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom>
-        Scanner QR Code
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1a237e' }}>
+        Validation de Présence
       </Typography>
       
       <Grid container spacing={3}>
+        {/* SECTION SAISIE DU CODE */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ boxShadow: 4, borderRadius: 3 }}>
             <CardContent>
-              <Box display="flex" flexDirection="column" alignItems="center" p={3}>
-                <QrCodeIcon sx={{ fontSize: 100, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Scanner un QR Code de présence
+              <Box display="flex" flexDirection="column" alignItems="center" p={2}>
+                <AttendanceIcon sx={{ fontSize: 80, color: 'primary.main', mb: 1 }} />
+                
+                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                  Enregistrer ma présence
                 </Typography>
-                <Typography variant="body2" color="textSecondary" align="center" gutterBottom>
-                  Entrez le code QR fourni par votre professeur
+                
+                <Typography variant="body2" color="textSecondary" align="center" sx={{ mb: 3 }}>
+                  Collez ci-dessous le code aléatoire généré par le professeur.
                 </Typography>
                 
                 <TextField
                   fullWidth
-                  label="Code QR"
+                  label="Code de présence"
+                  variant="filled"
                   value={qrCode}
                   onChange={(e) => setQrCode(e.target.value)}
-                  margin="normal"
-                  placeholder="Collez le code QR ici"
-                  sx={{ maxWidth: 500 }}
+                  placeholder="Ex: A7k9L2..."
+                  InputProps={{
+                    startAdornment: <PasteIcon sx={{ color: 'action.active', mr: 1 }} />,
+                  }}
+                  sx={{ 
+                    mb: 2,
+                    '& .MuiInputBase-input': { 
+                      fontSize: '1.5rem', 
+                      textAlign: 'center', 
+                      letterSpacing: 2,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase' // Force majuscules visuellement si besoin
+                    } 
+                  }}
                 />
                 
                 <Button
                   variant="contained"
+                  fullWidth
                   size="large"
-                  onClick={handleScan}
+                  onClick={handleValidation}
                   disabled={!qrCode.trim()}
-                  sx={{ mt: 2, mb: 2, minWidth: 200 }}
+                  sx={{ 
+                    py: 1.5, 
+                    fontSize: '1.1rem',
+                    borderRadius: 2,
+                    boxShadow: 3
+                  }}
                 >
-                  Scanner
+                  Valider ma présence
                 </Button>
               </Box>
             </CardContent>
           </Card>
         </Grid>
         
+        {/* SECTION HISTORIQUE */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Derniers scans
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                Historique récent
               </Typography>
               
-              {scanHistory.length === 0 ? (
-                <Box textAlign="center" py={3}>
-                  <Typography color="textSecondary">
-                    Aucun scan récent
-                  </Typography>
-                </Box>
-              ) : (
-                <Box>
-                  {scanHistory.map((scan, index) => (
-                    <Paper 
-                      key={index} 
-                      sx={{ 
-                        p: 2, 
-                        mb: 1,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body1" fontWeight="medium">
-                          {scan.cours}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          {formatDate(scan.date)}
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label={scan.statut}
-                        color={getStatusColor(scan.statut)}
-                        size="small"
-                      />
-                    </Paper>
-                  ))}
-                </Box>
-              )}
-              
-              <Box mt={2}>
-                <Typography variant="body2" color="textSecondary">
-                  <strong>Instructions :</strong>
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  1. Le professeur affichera un code QR au début du cours
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  2. Copiez-collez le code dans le champ ci-dessus
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  3. Votre présence sera automatiquement enregistrée
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  4. Le code QR est valable uniquement pendant 10 minutes
-                </Typography>
+              <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                {scanHistory.map((scan, index) => (
+                  <Paper 
+                    key={index} 
+                    elevation={0}
+                    sx={{ 
+                      p: 2, 
+                      mb: 1.5, 
+                      bgcolor: '#f8f9fa',
+                      borderLeft: `5px solid`,
+                      borderColor: `${getStatusColor(scan.statut)}.main`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight="bold">{scan.cours}</Typography>
+                      <Typography variant="caption" color="textSecondary">{formatDate(scan.date)}</Typography>
+                    </Box>
+                    <Chip label={scan.statut} color={getStatusColor(scan.statut)} size="small" />
+                  </Paper>
+                ))}
               </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
       
-      {/* Dialogue de succès */}
+      {/* DIALOGUES DE RETOUR */}
       <Dialog open={successDialog} onClose={() => setSuccessDialog(false)}>
-        <DialogTitle>
+        <DialogTitle sx={{ bgcolor: 'success.light', color: 'success.contrastText' }}>
           <Box display="flex" alignItems="center">
-            <CheckCircle color="success" sx={{ mr: 1 }} />
-            Scan réussi !
+            <CheckCircle sx={{ mr: 1 }} /> Présence validée !
           </Box>
         </DialogTitle>
-        <DialogContent>
-          <Box>
-            <Typography gutterBottom>
-              <strong>Statut :</strong> PRÉSENT
-            </Typography>
-            <Typography gutterBottom>
-              <strong>Message :</strong> Présence enregistrée avec succès
-            </Typography>
-          </Box>
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography>Votre présence a été enregistrée avec succès pour ce cours.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSuccessDialog(false)}>Fermer</Button>
+          <Button onClick={() => setSuccessDialog(false)} color="success" variant="contained">Parfait</Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Dialogue d'erreur */}
+
       <Dialog open={errorDialog} onClose={() => setErrorDialog(false)}>
-        <DialogTitle>
+        <DialogTitle sx={{ bgcolor: 'error.light', color: 'error.contrastText' }}>
           <Box display="flex" alignItems="center">
-            <Cancel color="error" sx={{ mr: 1 }} />
-            Erreur de scan
+            <Cancel sx={{ mr: 1 }} /> Erreur
           </Box>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ mt: 2 }}>
           <Typography>{message}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setErrorDialog(false)}>Fermer</Button>
+          <Button onClick={() => setErrorDialog(false)} color="error">Réessayer</Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -6,29 +6,33 @@ const AttendanceQR = () => {
   const [sessionData, setSessionData] = useState('');
   const [qrValue, setQrValue] = useState('');
 
+  // Génère uniquement une clé courte style UG3WG
+  const generateRandomCode = (length = 5) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
+
   const generateQRCode = () => {
-    // On crée un objet contenant les infos de la session et un timestamp
-    // pour éviter que les élèves ne réutilisent un vieux code.
-    const data = {
-      course: sessionData,
-      timestamp: Date.now(),
-      teacherId: "PROF_001" // Id statique pour l'exemple
-    };
-    
-    setQrValue(JSON.stringify(data));
+    // On génère la clé courte uniquement
+    const codeSimple = generateRandomCode(5); 
+    setQrValue(codeSimple);
   };
 
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
           Générateur de Présence
         </Typography>
 
         <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
           <TextField
             fullWidth
-            label="Nom du cours ou ID de session"
+            label="Nom du cours"
             variant="outlined"
             value={sessionData}
             onChange={(e) => setSessionData(e.target.value)}
@@ -37,31 +41,25 @@ const AttendanceQR = () => {
           
           <Button 
             variant="contained" 
-            color="primary" 
             fullWidth 
             onClick={generateQRCode}
-            disabled={!sessionData}
+            disabled={!sessionData.trim()}
+            size="large"
           >
-            Générer le Code QR
+            Générer le Code
           </Button>
         </Paper>
 
         {qrValue && (
-          <Box sx={{ mt: 4, p: 3, bgcolor: 'white', display: 'inline-block' }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Scannez pour valider la présence
-            </Typography>
+          <Box sx={{ mt: 4, p: 3, bgcolor: 'white', borderRadius: 2, boxShadow: 2 }}>
+            <QRCodeCanvas value={qrValue} size={256} level={"H"} includeMargin={true} />
             
-            <QRCodeCanvas 
-              value={qrValue} 
-              size={256}
-              level={"H"} // Niveau de correction d'erreur élevé
-              includeMargin={true}
-            />
-            
-            <Typography variant="caption" display="block" sx={{ mt: 2 }}>
-              Données encodées : {sessionData}
-            </Typography>
+            <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+              <Typography variant="body2" color="textSecondary">Code à transmettre :</Typography>
+              <Typography variant="h1" sx={{ fontWeight: 900, color: '#1a237e', letterSpacing: 5 }}>
+                {qrValue}
+              </Typography>
+            </Box>
           </Box>
         )}
       </Box>
